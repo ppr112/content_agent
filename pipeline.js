@@ -1,6 +1,6 @@
 require('dotenv').config();
 const fetch = require('node-fetch');
-const { transcribeVideo } = require('./transcribe');
+const { extractContent } = require('./extract');
 const { generateContent } = require('./generate');
 const { writeToSheet } = require('./sheets');
 const { generateAllImages } = require('./images');
@@ -25,7 +25,7 @@ async function notifyComplete(clientName, pieceCount) {
   }
 }
 
-async function runPipeline(videoUrl, options = {}) {
+async function runPipeline(input, options = {}) {
   const {
     clientName = 'My Content',
     brandVoice = null,
@@ -36,7 +36,7 @@ async function runPipeline(videoUrl, options = {}) {
   console.log(`🚀 Content Pipeline — ${clientName}`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-  const transcript = await transcribeVideo(videoUrl);
+  const transcript = await extractContent(input);
   const pieces = await generateContent(transcript, options);
   await writeToSheet(pieces);
 
@@ -61,12 +61,12 @@ async function runPipeline(videoUrl, options = {}) {
 }
 
 if (require.main === module) {
-  const url = process.argv[2];
-  if (!url) {
-    console.log('Usage: node pipeline.js "youtube-url"');
+  const input = process.argv[2];
+  if (!input) {
+    console.log('Usage: node pipeline.js "youtube-url or website-url or text"');
     process.exit(1);
   }
-  runPipeline(url).catch(console.error);
+  runPipeline(input).catch(console.error);
 }
 
 module.exports = { runPipeline };

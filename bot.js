@@ -1,6 +1,6 @@
 require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
-const { transcribeVideo } = require('./transcribe');
+const { extractContent, detectSource } = require('./extract');
 const { generateContent } = require('./generate');
 const { writeToSheet } = require('./sheets');
 const { generateAllImages } = require('./images');
@@ -11,7 +11,7 @@ const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
 console.log('🤖 Bot is running...');
 
 bot.onText(/\/start/, (msg) => {
-  bot.sendMessage(msg.chat.id, `Welcome to in'ThepursuiTof Content Engine 🔥\n\nSend me any YouTube link and I'll generate:\n- 10 philosophical quotes\n- 10 branded Instagram images\n- Google Sheet with all content\n\nJust paste a link.`);
+  bot.sendMessage(msg.chat.id, `Welcome to in'ThepursuiTof Content Engine 🔥\n\nSend me anything:\n- YouTube link\n- Website/blog URL\n- Twitter/X link\n- TikTok link\n- Or just paste text directly\n\nI'll extract the wisdom and generate branded Instagram posts.`);
 });
 
 bot.on('message', async (msg) => {
@@ -21,19 +21,20 @@ bot.on('message', async (msg) => {
   // Ignore commands
   if (!text || text.startsWith('/')) return;
 
-  // Check if it's a YouTube URL
-  if (!text.includes('youtube.com') && !text.includes('youtu.be')) {
-    bot.sendMessage(chatId, '❌ That doesn\'t look like a YouTube link. Send me a valid YouTube URL.');
+  // Need minimum input
+  if (text.length < 10) {
+    bot.sendMessage(chatId, '❌ Send me a URL or paste some text. Needs to be at least a sentence.');
     return;
   }
 
   try {
-    bot.sendMessage(chatId, '🚀 Pipeline starting...');
+    const source = detectSource(text);
+    bot.sendMessage(chatId, `🚀 Pipeline starting...\n📎 Source: ${source}`);
 
-    // Step 1: Transcribe
-    bot.sendMessage(chatId, '🎙️ Downloading and transcribing audio...');
-    const transcript = await transcribeVideo(text);
-    bot.sendMessage(chatId, `✅ Transcribed! ${transcript.length} characters`);
+    // Step 1: Extract content
+    bot.sendMessage(chatId, '📎 Extracting content...');
+    const transcript = await extractContent(text);
+    bot.sendMessage(chatId, `✅ Extracted! ${transcript.length} characters`);
 
     // Step 2: Generate content
     bot.sendMessage(chatId, '🧠 Generating quotes...');
@@ -45,7 +46,7 @@ bot.on('message', async (msg) => {
 
     // Step 3: Write to sheets
     await writeToSheet(pieces);
-    bot.sendMessage(chatId, `📊 Google Sheet updated`);
+    bot.sendMessage(chatId, '📊 Google Sheet updated');
 
     // Step 4: Generate images
     const now = new Date();
@@ -74,6 +75,6 @@ bot.on('message', async (msg) => {
 
   } catch (err) {
     console.error(err);
-    bot.sendMessage(chatId, `❌ Something went wrong: ${err.message}\n\nTry a shorter video or try again.`);
+    bot.sendMessage(chatId, `❌ Something went wrong: ${err.message}\n\nTry a different source or paste the text directly.`);
   }
 });
