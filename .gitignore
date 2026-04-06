@@ -1,0 +1,15 @@
+node_modules/
+.env
+credentials.json
+temp_audio.mp3
+temp_audio.webm
+images*/
+fonts/
+assets/
+test.mp3
+package-lock.json
+*.mp3
+*.webm
+*.png
+*.jpg
+*.jpeg
