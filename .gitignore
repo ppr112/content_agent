@@ -4,7 +4,6 @@ credentials.json
 temp_audio.mp3
 temp_audio.webm
 images*/
-fonts/
 assets/
 test.mp3
 package-lock.json
