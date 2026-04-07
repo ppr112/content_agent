@@ -2,10 +2,19 @@ require('dotenv').config();
 const { google } = require('googleapis');
 
 async function getAuthClient() {
-  const auth = new google.auth.GoogleAuth({
-    keyFile: './credentials.json',
-    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-  });
+  let auth;
+  if (process.env.GOOGLE_CREDENTIALS) {
+    const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+    auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+  } else {
+    auth = new google.auth.GoogleAuth({
+      keyFile: './credentials.json',
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+  }
   return auth.getClient();
 }
 
